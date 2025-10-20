@@ -1,0 +1,14 @@
+# Azure Functions Core
+azure-functions
+
+# Azure SDK
+azure-data-tables
+azure-identity
+azure-keyvault-secrets
+azure-storage-blob
+
+# HTTP Requests
+requests
+
+# AI/OpenAI
+openai>=1.0.0
