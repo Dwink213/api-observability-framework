@@ -1,0 +1,153 @@
+# ==============================================================================
+# api-observability-framework .gitignore
+# ==============================================================================
+
+# CRITICAL: Never commit real secrets or credentials
+.env
+*.env
+!.env.example
+local.settings.json
+secrets.json
+credentials.json
+
+# Azure Function App
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+bin/
+obj/
+.vscode/
+.vs/
+
+# Azure Functions artifacts
+.azure/
+.azurefunctions/
+*.funcignore
+
+# Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.venv/
+venv/
+ENV/
+env/
+
+# Bicep
+*.zip
+*.tar.gz
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.out
+
+# Terraform (if you add it later)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!example.tfvars
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Build outputs
+*.pyc
+__pycache__/
+
+# Azure deployment artifacts
+.deployment
+deploy.cmd
+.azure-pipelines/
+
+# Personal notes (don't commit your todos!)
+TODO.md
+NOTES.md
+scratch.md
+
+# Test data with real API responses
+test-data/
+sample-responses/
+*.csv
+*.json
+!schema-templates/*.json
+!examples/**/*.json
+
+# Storage emulator data
+__blobstorage__/
+__queuestorage__/
+__azurite_db*__.json
+
+# Certificate files
+*.pfx
+*.p12
+*.key
+*.pem
+*.crt
+!examples/**/*.crt
+
+# Connection strings
+connectionstrings.json
+appsettings.local.json
+
+# macOS
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# ==============================================================================
+# Allow these specific files (exceptions)
+# ==============================================================================
+!.env.example
+!README.md
+!LICENSE
+!.gitignore
