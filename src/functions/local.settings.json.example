@@ -1,0 +1,26 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    
+    "KEY_VAULT_URL": "https://your-keyvault.vault.azure.net",
+    "API_BASE_URL": "https://api.example.com",
+    "API_AUTH_TYPE": "apikey",
+    "API_KEY_SECRET_NAME": "api-key",
+    "API_DATA_ENDPOINT": "/v1/events",
+    "API_ID_FIELD": "id",
+    "API_TIMESTAMP_FIELD": "created_at",
+    
+    "STORAGE_CONNECTION_STRING": "UseDevelopmentStorage=true",
+    "STORAGE_TABLE_NAME": "ApiData",
+    
+    "OPENAI_ENDPOINT": "https://your-openai.openai.azure.com",
+    "OPENAI_API_KEY": "your-key-here",
+    "OPENAI_DEPLOYMENT_NAME": "gpt-4",
+    
+    "ANALYSIS_LOOKBACK_DAYS": "7",
+    "ANALYSIS_FILTER_FIELD": "Status",
+    "ANALYSIS_FILTER_VALUES": "Error,Warning,Critical"
+  }
+}
