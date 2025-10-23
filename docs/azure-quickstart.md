@@ -49,24 +49,37 @@ cd infrastructure/bicep
 az deployment group create `
   --resource-group $RG `
   --template-file main.bicep `
-  --parameters `
-    functionAppName="api-obs-func" `
-    keyVaultName="api-obs-kv" `
-    storageAccountName="apiobsstorage"
+  --parameters baseName=api-obs environment=dev
+
+# Get the generated resource names (they have unique suffixes)
+$outputs = az deployment group show `
+  --resource-group $RG `
+  --name main `
+  --query properties.outputs -o json | ConvertFrom-Json
+
+$FUNC_APP = $outputs.functionAppName.value
+$KV_NAME = $outputs.keyVaultName.value
+$STORAGE_NAME = $outputs.storageAccountName.value
+
+Write-Host "Function App: $FUNC_APP"
+Write-Host "Key Vault: $KV_NAME"
+Write-Host "Storage Account: $STORAGE_NAME"
 ```
+
+**Note:** Resource names include unique suffixes for global uniqueness. Use the output values in subsequent steps.
 
 ---
 
 ## Step 3: Configure RBAC Permissions (5 min)
 
 ```powershell
-# Run RBAC setup script
+# Run RBAC setup script (use variables from previous step)
 cd ../../scripts/azure
 .\setup-rbac.ps1 `
-  -ResourceGroup "api-observability-rg" `
-  -FunctionAppName "api-obs-func" `
-  -KeyVaultName "api-obs-kv" `
-  -StorageAccountName "apiobsstorage" `
+  -ResourceGroup $RG `
+  -FunctionAppName $FUNC_APP `
+  -KeyVaultName $KV_NAME `
+  -StorageAccountName $STORAGE_NAME `
   -WaitForPropagation
 ```
 
@@ -82,20 +95,20 @@ cd ../../scripts/azure
 ## Step 4: Store API Credentials (2 min)
 
 ```powershell
-# Store your API key in Key Vault
+# Store your API key in Key Vault (use $KV_NAME from Step 2)
 az keyvault secret set `
-  --vault-name "api-obs-kv" `
+  --vault-name $KV_NAME `
   --name "api-key" `
   --value "<your-actual-api-key>"
 
 # For OAuth2 (if applicable):
 az keyvault secret set `
-  --vault-name "api-obs-kv" `
+  --vault-name $KV_NAME `
   --name "oauth-client-id" `
   --value "<client-id>"
 
 az keyvault secret set `
-  --vault-name "api-obs-kv" `
+  --vault-name $KV_NAME `
   --name "oauth-client-secret" `
   --value "<client-secret>"
 ```
@@ -105,18 +118,21 @@ az keyvault secret set `
 ## Step 5: Configure Function App Settings (3 min)
 
 ```powershell
-# Get storage connection string
+# Get storage connection string (use variables from Step 2)
 $STORAGE_CONN = az storage account show-connection-string `
-  --name "apiobsstorage" `
-  --resource-group "api-observability-rg" `
+  --name $STORAGE_NAME `
+  --resource-group $RG `
   --query connectionString -o tsv
+
+# Get Key Vault URL
+$KV_URL = "https://$KV_NAME.vault.azure.net"
 
 # Push settings from .env to Function App
 az functionapp config appsettings set `
-  --name "api-obs-func" `
-  --resource-group "api-observability-rg" `
+  --name $FUNC_APP `
+  --resource-group $RG `
   --settings `
-    KEY_VAULT_URL="https://api-obs-kv.vault.azure.net" `
+    KEY_VAULT_URL="$KV_URL" `
     API_BASE_URL="<from-your-.env>" `
     API_AUTH_TYPE="<from-your-.env>" `
     API_KEY_SECRET_NAME="api-key" `
@@ -135,8 +151,8 @@ az functionapp config appsettings set `
 # Navigate to functions folder
 cd ../../src/functions
 
-# Deploy to Azure
-func azure functionapp publish api-obs-func --python
+# Deploy to Azure (use $FUNC_APP from Step 2)
+func azure functionapp publish $FUNC_APP --python
 ```
 
 **Expected output:**
@@ -162,7 +178,7 @@ Functions in api-obs-func:
 schedule="*/10 * * * *"  # Enable (runs every 10 min)
 
 # Redeploy
-func azure functionapp publish api-obs-func --python
+func azure functionapp publish $FUNC_APP --python
 ```
 
 **Wait 10 minutes, then check logs:**
@@ -182,7 +198,7 @@ az monitor app-insights query `
 
 **Repeat for each function:**
 1. Change schedule to `"*/10 * * * *"`
-2. Redeploy: `func azure functionapp publish api-obs-func`
+2. Redeploy: `func azure functionapp publish $FUNC_APP`
 3. Wait 10 minutes
 4. Check logs for success message
 5. Once validated, change schedule back to `"0 0 1 1 1 2099"` (disable)
@@ -221,9 +237,9 @@ Production functions are already enabled by default:
 
 **After 1 hour, check data collection:**
 ```powershell
-# Check if table has data
+# Check if table has data (use $STORAGE_NAME from Step 2)
 az storage table list `
-  --account-name apiobsstorage `
+  --account-name $STORAGE_NAME `
   --query "[?name=='ApiData']"
 
 # View logs
@@ -243,7 +259,7 @@ az monitor app-insights query `
 1. Enable static website hosting:
 ```powershell
 az storage blob service-properties update `
-  --account-name apiobsstorage `
+  --account-name $STORAGE_NAME `
   --static-website `
   --index-document index.html
 ```
@@ -251,8 +267,8 @@ az storage blob service-properties update `
 2. Get dashboard URL:
 ```powershell
 az storage account show `
-  --name apiobsstorage `
-  --resource-group api-observability-rg `
+  --name $STORAGE_NAME `
+  --resource-group $RG `
   --query "primaryEndpoints.web" -o tsv
 ```
 
@@ -264,20 +280,20 @@ az storage account show `
 
 **403 Forbidden errors?**
 ```powershell
-# Re-run RBAC script and wait 5 min
-.\scripts\azure\setup-rbac.ps1 -ResourceGroup "api-observability-rg" -FunctionAppName "api-obs-func" -KeyVaultName "api-obs-kv" -StorageAccountName "apiobsstorage" -WaitForPropagation
+# Re-run RBAC script and wait 5 min (use your variables)
+.\scripts\azure\setup-rbac.ps1 -ResourceGroup $RG -FunctionAppName $FUNC_APP -KeyVaultName $KV_NAME -StorageAccountName $STORAGE_NAME -WaitForPropagation
 ```
 
 **Secret not found?**
 ```powershell
 # List secrets (verify name matches exactly)
-az keyvault secret list --vault-name "api-obs-kv" -o table
+az keyvault secret list --vault-name $KV_NAME -o table
 ```
 
 **Functions not triggering?**
 ```powershell
 # Check function app status
-az functionapp show --name "api-obs-func" --resource-group "api-observability-rg" --query "state"
+az functionapp show --name $FUNC_APP --resource-group $RG --query "state"
 ```
 
 **See [docs/azure-troubleshooting.md](docs/azure-troubleshooting.md) for complete troubleshooting guide.**

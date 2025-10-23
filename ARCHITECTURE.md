@@ -1,8 +1,10 @@
-# Vendor-Agnostic API Monitoring & Analysis System
-
-## Architecture Overview
+# API Monitoring & Analysis System
+## Azure Serverless Architecture
 
 This system monitors **any RESTful or GraphQL API** through a serverless architecture that progressively tests and validates each component before executing production workloads. The design follows a strict dependency chain where each function proves a specific capability works before dependent functions execute.
+
+**Current Implementation:** Azure Functions (Python 3.11)
+**Architecture Pattern:** Cloud-agnostic design, Azure-specific implementation
 
 **Use Cases:**
 - Backup system monitoring
